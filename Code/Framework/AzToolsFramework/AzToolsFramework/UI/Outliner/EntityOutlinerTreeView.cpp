@@ -162,7 +162,17 @@ namespace AzToolsFramework
         bool forceUpdate = false;
 
         m_mousePosition = event->pos();
-        
+
+        // The queued press is only meaningful while a button is still held. On macOS the mouse release that ends a
+        // native drag session is consumed by AppKit and never reaches this widget (Qt only delivers a button-less
+        // release that no widget receives), so without this a plain hover move after such a drag would start the
+        // drag all over again, forever.
+        if (m_queuedMouseEvent && event->buttons() == Qt::NoButton)
+        {
+            ClearQueuedMouseEvent();
+            m_isDragSelectActive = false;
+        }
+
         if (m_queuedMouseEvent)
         {
             if (!m_isDragSelectActive)
